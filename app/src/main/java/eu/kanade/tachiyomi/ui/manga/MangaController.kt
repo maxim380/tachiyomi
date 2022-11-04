@@ -26,6 +26,7 @@ import eu.kanade.presentation.manga.DownloadAction
 import eu.kanade.presentation.manga.MangaScreen
 import eu.kanade.presentation.manga.components.DeleteChaptersDialog
 import eu.kanade.presentation.manga.components.DownloadCustomAmountDialog
+import eu.kanade.presentation.manga.components.MissingChaptersDialog
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.DownloadService
 import eu.kanade.tachiyomi.data.download.model.Download
@@ -49,6 +50,7 @@ import eu.kanade.tachiyomi.ui.manga.track.TrackItem
 import eu.kanade.tachiyomi.ui.manga.track.TrackSearchDialog
 import eu.kanade.tachiyomi.ui.manga.track.TrackSheet
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.ui.reader.viewer.hasMissingChapters
 import eu.kanade.tachiyomi.ui.recent.history.HistoryController
 import eu.kanade.tachiyomi.ui.recent.updates.UpdatesController
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
@@ -192,6 +194,15 @@ class MangaController : FullComposeController<MangaPresenter> {
                     },
                     onOpenManga = { router.pushController(MangaController(dialog.duplicate.id)) },
                     duplicateFrom = presenter.getSourceOrStub(dialog.duplicate),
+                )
+            }
+            is Dialog.MissingChapters -> {
+                MissingChaptersDialog(
+                    onDismissRequest = onDismissRequest,
+                    onConfirm = { chapter ->
+                        openChapter(chapter)
+                    },
+                    chapter = dialog.chapter,
                 )
             }
             null -> {}
@@ -347,8 +358,16 @@ class MangaController : FullComposeController<MangaPresenter> {
     // Chapters list - start
 
     private fun continueReading() {
-        val chapter = presenter.getNextUnreadChapter()
-        if (chapter != null) openChapter(chapter)
+        val nextChapter = presenter.getNextUnreadChapter()
+        val lastReadChapter = presenter.getLastReadChapter()
+
+        if (nextChapter != null) {
+            if (hasMissingChapters(nextChapter, lastReadChapter)) {
+                presenter.showMissingChaptersDialog(nextChapter)
+            } else {
+                openChapter(nextChapter)
+            }
+        }
     }
 
     private fun openChapter(chapter: DomainChapter) {

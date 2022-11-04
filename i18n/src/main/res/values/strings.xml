@@ -663,6 +663,8 @@
     <string name="set_chapter_settings_as_default">Set as default</string>
     <string name="no_chapters_error">No chapters found</string>
     <string name="are_you_sure">Are you sure?</string>
+    <string name="missing_chapter">Missing chapter</string>
+    <string name="missing_chapters_message">There is a chapter missing, are you sure you want to continue reading?</string>
 
     <!-- Tracking Screen -->
     <string name="tracker_anilist" translatable="false">AniList</string>

@@ -588,6 +588,17 @@ class MangaPresenter(
         }
     }
 
+    fun getLastReadChapter(): DomainChapter? {
+        val successState = successState ?: return null
+        return successState.processedChapters.map { it.chapter }.let { chapters ->
+            if (successState.manga.sortDescending()) {
+                chapters.find { it.read }
+            } else {
+                chapters.findLast { it.read }
+            }
+        }
+    }
+
     fun getUnreadChapters(): List<DomainChapter> {
         return successState?.processedChapters
             ?.filter { (chapter, dlStatus) -> !chapter.read && dlStatus == Download.State.NOT_DOWNLOADED }
@@ -1041,6 +1052,7 @@ class MangaPresenter(
         data class DeleteChapters(val chapters: List<DomainChapter>) : Dialog()
         data class DuplicateManga(val manga: DomainManga, val duplicate: DomainManga) : Dialog()
         data class DownloadCustomAmount(val max: Int) : Dialog()
+        data class MissingChapters(val chapter: DomainChapter) : Dialog()
     }
 
     fun dismissDialog() {
@@ -1067,6 +1079,15 @@ class MangaPresenter(
             when (state) {
                 MangaScreenState.Loading -> state
                 is MangaScreenState.Success -> state.copy(dialog = Dialog.DeleteChapters(chapters))
+            }
+        }
+    }
+
+    fun showMissingChaptersDialog(chapter: DomainChapter) {
+        _state.update { state ->
+            when (state) {
+                MangaScreenState.Loading -> state
+                is MangaScreenState.Success -> state.copy(dialog = Dialog.MissingChapters(chapter))
             }
         }
     }
